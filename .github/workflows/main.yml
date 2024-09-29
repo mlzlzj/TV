@@ -59,7 +59,7 @@ jobs:
           chrome-version: stable
       - name: Download chrome driver
         if: env.OPEN_DRIVER == 'True' || env.OPEN_DRIVER == 'true'
-        uses: nanasess/setup-chromedriver@main
+        uses: nanasess/setup-chromedriver@master
       - name: Launch chrome driver
         if: env.OPEN_DRIVER == 'True' || env.OPEN_DRIVER == 'true'
         run: |
