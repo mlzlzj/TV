@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Set branch name
         id: vars
-        run: echo "BRANCH_NAME=${{ github.repository_owner == 'Guovin' && 'gd' || 'master' }}" >> $GITHUB_ENV
+        run: echo "BRANCH_NAME=${{ github.repository_owner == 'Guovin' && 'gd' || 'main' }}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
         with:
           ref: ${{ env.BRANCH_NAME }}
@@ -59,7 +59,7 @@ jobs:
           chrome-version: stable
       - name: Download chrome driver
         if: env.OPEN_DRIVER == 'True' || env.OPEN_DRIVER == 'true'
-        uses: nanasess/setup-chromedriver@master
+        uses: nanasess/setup-chromedriver@main
       - name: Launch chrome driver
         if: env.OPEN_DRIVER == 'True' || env.OPEN_DRIVER == 'true'
         run: |
