@@ -7,21 +7,7 @@ on:
   workflow_dispatch:
     branches:
       - main
-      # - dev
-      # - main
-      # - gd
-      # - gd-test
-# on:
-#   schedule:
-#     - cron: '0 22 * * *'
-#     - cron: '0 10 * * *'
-#   workflow_dispatch:
-#     branches:
-#       - master
-#       - dev
-#       - main
-
-      
+           
 jobs:
   push:
     runs-on: ${{ matrix.operating-system }}
