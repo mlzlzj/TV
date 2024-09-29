@@ -5,10 +5,10 @@ on:
     - cron: '0 22 * * *'
     - cron: '0 10 * * *'
   workflow_dispatch:
-    inputs:
-      - master
-      - dev
+    branches:
       - main
+      # - dev
+      # - main
       # - gd
       # - gd-test
 # on:
