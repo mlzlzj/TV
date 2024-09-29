@@ -263,38 +263,38 @@ def get_ip_address():
     return f"http://{IP}:8000"
 
 
-def convert_to_m3u():
-    """
-    Convert result txt to m3u format
-    """
-    user_final_file = config.get("Settings", "final_file")
-    if os.path.exists(resource_path(user_final_file)):
-        with open(resource_path(user_final_file), "r", encoding="utf-8") as file:
-            m3u_output = '#EXTM3U x-tvg-url="https://live.fanmingming.com/e.xml"\n'
-            current_group = None
-            for line in file:
-                trimmed_line = line.strip()
-                if trimmed_line != "":
-                    if "#genre#" in trimmed_line:
-                        current_group = trimmed_line.replace(",#genre#", "").strip()
-                    else:
-                        original_channel_name, channel_link = map(
-                            str.strip, trimmed_line.split(",")
-                        )
-                        processed_channel_name = re.sub(
-                            r"(CCTV|CETV)-(\d+)(\+.*)?",
-                            lambda m: f"{m.group(1)}{m.group(2)}"
-                            + ("+" if m.group(3) else ""),
-                            original_channel_name,
-                        )
-                        m3u_output += f'#EXTINF:-1 tvg-name="{processed_channel_name}" tvg-logo="https://live.fanmingming.com/tv/{processed_channel_name}.png"'
-                        if current_group:
-                            m3u_output += f' group-title="{current_group}"'
-                        m3u_output += f",{original_channel_name}\n{channel_link}\n"
-            m3u_file_path = os.path.splitext(resource_path(user_final_file))[0] + ".m3u"
-            with open(m3u_file_path, "w", encoding="utf-8") as m3u_file:
-                m3u_file.write(m3u_output)
-            print(f"result m3u file generated at: {m3u_file_path}")
+# def convert_to_m3u():
+#     """
+#     Convert result txt to m3u format
+#     """
+#     user_final_file = config.get("Settings", "final_file")
+#     if os.path.exists(resource_path(user_final_file)):
+#         with open(resource_path(user_final_file), "r", encoding="utf-8") as file:
+#             m3u_output = '#EXTM3U x-tvg-url="https://live.fanmingming.com/e.xml"\n'
+#             current_group = None
+#             for line in file:
+#                 trimmed_line = line.strip()
+#                 if trimmed_line != "":
+#                     if "#genre#" in trimmed_line:
+#                         current_group = trimmed_line.replace(",#genre#", "").strip()
+#                     else:
+#                         original_channel_name, channel_link = map(
+#                             str.strip, trimmed_line.split(",")
+#                         )
+#                         processed_channel_name = re.sub(
+#                             r"(CCTV|CETV)-(\d+)(\+.*)?",
+#                             lambda m: f"{m.group(1)}{m.group(2)}"
+#                             + ("+" if m.group(3) else ""),
+#                             original_channel_name,
+#                         )
+#                         m3u_output += f'#EXTINF:-1 tvg-name="{processed_channel_name}" tvg-logo="https://live.fanmingming.com/tv/{processed_channel_name}.png"'
+#                         if current_group:
+#                             m3u_output += f' group-title="{current_group}"'
+#                         m3u_output += f",{original_channel_name}\n{channel_link}\n"
+#             m3u_file_path = os.path.splitext(resource_path(user_final_file))[0] + ".m3u"
+#             with open(m3u_file_path, "w", encoding="utf-8") as m3u_file:
+#                 m3u_file.write(m3u_output)
+#             print(f"result m3u file generated at: {m3u_file_path}")
 
 
 def get_result_file_content(show_result=False):
