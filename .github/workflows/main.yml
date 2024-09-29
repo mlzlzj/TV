@@ -15,7 +15,9 @@ on:
     - cron: '0 ,09,21 * * *'
   push:
     branches:
-      - main
+     - master
+     - dev
+     - main
 
       
 jobs:
