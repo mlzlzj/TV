@@ -13,7 +13,7 @@ from utils.tools import (
     update_file,
     get_pbar_remaining,
     get_ip_address,
-    # convert_to_m3u,
+    convert_to_m3u,
     get_result_file_content,
     process_nested_dict,
 )
