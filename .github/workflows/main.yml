@@ -123,3 +123,12 @@ jobs:
             git commit -m "Github Action Auto Updated"
             git push origin main --force  # 指定分支并强制推送
           fi
+
+      - name: 提交更改
+        run: |
+          git config --local user.email "vjfchen@sina.com"
+          git config --local user.name "mlzlzj"
+          git add .
+          # git commit *.txt -m "Add generated file"
+          #git pull --rebase
+          git push -f
