@@ -776,3 +776,16 @@ NewTV动作电影,http://[2409:8087:1a01:df::7005]/ottrrs.hl.chinamobile.com/PLT
 东森电影,http://1b6467f415.iok.la:9931/tsfile/live/1043_1.m3u8
 东森超视,http://38.64.72.148:80/hls/modn/list/2013/chunklist0.m3u8
 东森超视,rtmp://f13h.mine.nu/sat/tv331$1280x720
+TVBS NEWS,http://61.221.215.25:8800/hls/9/index.m3u8
+八大戏剧,http://61.221.215.25:8800/hls/39/index.m3u8
+八大第一,http://61.221.215.25:8800/hls/55/index.m3u8
+八大综合,http://61.221.215.25:8800/hls/56/index.m3u8
+三立戏剧,http://61.221.215.25:8800/hls/41/index.m3u8
+AMC电影台,http://61.221.215.25:8800/hls/43/index.m3u8
+纬来精彩,http://61.221.215.25:8800/hls/48/index.m3u8
+探索亚洲,http://61.221.215.25:8800/hls/50/index.m3u8
+NHK WORLD,http://61.221.215.25:8800/hls/51/index.m3u8
+动物星球,http://61.221.215.25:8800/hls/57/index.m3u8
+中华小当家,http://61.221.215.25:8800/hls/40/index.m3u8
+凤凰资讯,http://61.221.215.25:8800/hls/47/index.m3u8
+
