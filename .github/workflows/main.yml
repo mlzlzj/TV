@@ -2,25 +2,21 @@ name: 'update schedule'
 
 on:
   schedule:
-    - cron: '0 ,09, * * *'
+    - cron: '0 9 * * *'  # 修正cron表达式
   workflow_dispatch:
     branches:
       - main
            
 jobs:
   push:
-    runs-on: ${{ matrix.operating-system }}
+    runs-on: ubuntu-20.04
     timeout-minutes: 120
-    strategy:
-      matrix:
-        operating-system: ['ubuntu-20.04']
     steps:
-      - name: Set branch name
-        id: vars
-        run: echo "BRANCH_NAME=${{ github.repository_owner == 'mlzlzj' && 'main' || 'main' }}" >> $GITHUB_ENV
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          ref: ${{ env.BRANCH_NAME }}
+          ref: main  # 直接使用main分支
+          
       - name: Run with setup-python 3.8
         uses: actions/setup-python@v4
         with:
@@ -74,27 +70,18 @@ jobs:
         run: pipenv --python 3.8 && pipenv install
       - name: Build
         run: pipenv run build
+        
+
       - name: Commit and push if changed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git diff
-          final_file=$(python -c '
-          try: 
-            from utils.config import config
-            final_file = config.get("Settings", "final_file")
-          except: 
-            final_file = "output/result.txt"
-          print(final_file)')
-          final_m3u_file=$(python -c '
-          try: 
-            from utils.config import config
-            import os
-            final_file = config.get("Settings", "final_file")
-            final_m3u_file = os.path.splitext(final_file)[0] + ".m3u"
-          except: 
-            final_m3u_file = "output/result.m3u"
-          print(final_m3u_file)')
+          # 忽略二进制文件差异
+          git checkout --theirs output/result_cache.pkl
+          # 获取最终文件名
+          final_file=$(python -c 'try: from utils.config import config; final_file = config.get("Settings", "final_file"); except: final_file = "output/result.txt"; print(final_file)')
+          final_m3u_file=$(python -c 'try: from utils.config import config; import os; final_file = config.get("Settings", "final_file"); final_m3u_file = os.path.splitext(final_file)[0] + ".m3u"; except: final_m3u_file = "output/result.m3u"; print(final_m3u_file)')
+          # 添加文件到暂存区
           if [[ -f "$final_file" ]]; then
             git add -f "$final_file"
           fi
@@ -107,9 +94,6 @@ jobs:
           if [[ -f "result.m3u" ]]; then
             git add -f "result.m3u"
           fi
-          if [[ -f "output/result_cache.pkl" ]]; then
-            git add -f "output/result_cache.pkl"
-          fi
           if [[ -f "output/user_result.log" ]]; then
             git add -f "output/user_result.log"
           elif [[ -f "output/result.log" ]]; then
@@ -121,7 +105,8 @@ jobs:
           if [[ -f "updates/fofa/fofa_multicast_region_result.pkl" ]]; then
             git add -f "updates/fofa/fofa_multicast_region_result.pkl"
           fi
+          # 如果有更改，则提交并推送
           if ! git diff --staged --quiet; then
             git commit -m "Github Action Auto Updated"
-            git push --force
+            git push origin main --force  # 指定分支并强制推送
           fi
