@@ -2,7 +2,7 @@ name: 'update schedule'
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # 每天上午9点触发
+    - cron: '0 ,06,17 * * *'  
   workflow_dispatch:
     branches:
       - main
