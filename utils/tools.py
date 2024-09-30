@@ -278,19 +278,24 @@ def convert_to_m3u():
                     if "#genre#" in trimmed_line:
                         current_group = trimmed_line.replace(",#genre#", "").strip()
                     else:
-                        original_channel_name, channel_link = map(
-                            str.strip, trimmed_line.split(",")
-                        )
-                        processed_channel_name = re.sub(
-                            r"(CCTV|CETV)-(\d+)(\+.*)?",
-                            lambda m: f"{m.group(1)}{m.group(2)}"
-                            + ("+" if m.group(3) else ""),
-                            original_channel_name,
-                        )
-                        m3u_output += f'#EXTINF:-1 tvg-name="{processed_channel_name}" tvg-logo="https://live.fanmingming.com/tv/{processed_channel_name}.png"'
-                        if current_group:
-                            m3u_output += f' group-title="{current_group}"'
-                        m3u_output += f",{original_channel_name}\n{channel_link}\n"
+                        parts = trimmed_line.split(",")
+                        if len(parts) == 2:
+                            original_channel_name, channel_link = map(
+                                str.strip, parts
+                            )
+                            processed_channel_name = re.sub(
+                                r"(CCTV|CETV)-(\d+)(\+.*)?",
+                                lambda m: f"{m.group(1)}{m.group(2)}"
+                                + ("+" if m.group(3) else ""),
+                                original_channel_name,
+                            )
+                            m3u_output += f'#EXTINF:-1 tvg-name="{processed_channel_name}" tvg-logo="https://live.fanmingming.com/tv/{processed_channel_name}.png"'
+                            if current_group:
+                                m3u_output += f' group-title="{current_group}"'
+                            m3u_output += f",{original_channel_name}\n{channel_link}\n"
+                        else:
+                            # Handle the error or skip this line if the format is incorrect
+                            print(f"Skipping line due to incorrect format: {trimmed_line}")
             m3u_file_path = os.path.splitext(resource_path(user_final_file))[0] + ".m3u"
             with open(m3u_file_path, "w", encoding="utf-8") as m3u_file:
                 m3u_file.write(m3u_output)
