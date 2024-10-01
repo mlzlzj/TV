@@ -2,7 +2,7 @@ name: 'update schedule'
 
 on:
   schedule:
-    - cron: '0 ,06,17 * * *'  
+    - cron: '0 ,06,17 * * *'
   workflow_dispatch:
     branches:
       - main
@@ -25,7 +25,6 @@ jobs:
           cache: 'pipenv'
           
       - name: Check open_driver config
-        id: check_driver
         run: |
           echo "OPEN_DRIVER=$(python -c '
           try:
@@ -36,7 +35,6 @@ jobs:
           print(open_driver)')" >> $GITHUB_ENV
           
       - name: Check open_ffmpeg config
-        id: check_ffmpeg
         run: |
           echo "OPEN_FFMPEG=$(python -c '
           try:
@@ -66,7 +64,7 @@ jobs:
         run: |
           export DISPLAY=:99
           chromedriver --url-base=/wd/hub &
-          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
+          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
           
       - name: Install FFmpeg
         if: env.OPEN_FFMPEG == 'True' || env.OPEN_FFMPEG == 'true'
@@ -75,34 +73,30 @@ jobs:
       - name: Install pipenv
         run: pip3 install --user pipenv
         
-      - name: Install dependecies
+      - name: Install dependencies
         run: pipenv --python 3.8 && pipenv install
         
       - name: Build
         run: pipenv run build
         
       - name: Set final file name
-        id: set_final_file
         run: |
-          final_file=$(python -c "try:
+          echo "FINAL_FILE=$(python -c "try:
             from utils.config import config
             print(config.get('Settings', 'final_file'))
           except:
-            print('output/result.txt')")
-          echo "::set-output name=final_file::$final_file"
-
+            print('output/result.txt')")" >> $GITHUB_ENV
+          
       - name: Set final m3u file name
-        id: set_final_m3u_file
         run: |
-          final_m3u_file=$(python -c "try:
+          echo "FINAL_M3U_FILE=$(python -c "try:
             from utils.config import config
             import os
             final_file = config.get('Settings', 'final_file')
             print(os.path.splitext(final_file)[0] + '.m3u')
           except:
-            print('output/result.m3u')")
-          echo "::set-output name=final_m3u_file::$final_m3u_file"
-
+            print('output/result.m3u')")" >> $GITHUB_ENV
+          
       - name: Commit and push if changed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -110,11 +104,11 @@ jobs:
           # 忽略二进制文件差异
           git checkout --theirs output/result_cache.pkl
           # 添加文件到暂存区
-          if [[ -f "${{ steps.set_final_file.outputs.final_file }}" ]]; then
-            git add -f "${{ steps.set_final_file.outputs.final_file }}"
+          if [[ -f "${FINAL_FILE}" ]]; then
+            git add -f "${FINAL_FILE}"
           fi
-          if [[ -f "${{ steps.set_final_m3u_file.outputs.final_m3u_file }}" ]]; then
-            git add -f "${{ steps.set_final_m3u_file.outputs.final_m3u_file }}"
+          if [[ -f "${FINAL_M3U_FILE}" ]]; then
+            git add -f "${FINAL_M3U_FILE}"
           fi
           # 添加其他可能存在的文件到暂存区
           # ... (添加其他文件的逻辑)
@@ -130,5 +124,6 @@ jobs:
           git config --local user.name "mlzlzj"
           git add .
           # git commit *.txt -m "Add generated file"
-          #git pull --rebase
+          # git pull --rebase
           git push -f
+          
