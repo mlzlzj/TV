@@ -837,4 +837,3 @@ def format_channel_url_info(data):
                 if resolution:
                     url = add_info_url(url, resolution)
                 url_info[i] = (url, date, resolution)
-                
