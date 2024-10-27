@@ -12,6 +12,7 @@ import threading
 import webbrowser
 from about import AboutUI
 from default import DefaultUI
+from prefer import PreferUI
 from multicast import MulticastUI
 from hotel import HotelUI
 from subscribe import SubscribeUI
@@ -28,6 +29,7 @@ class TkinterUI:
         self.version = info.get("version", "")
         self.about_ui = AboutUI()
         self.default_ui = DefaultUI()
+        self.prefer_ui = PreferUI()
         self.multicast_ui = MulticastUI()
         self.hotel_ui = HotelUI()
         self.subscribe_ui = SubscribeUI()
@@ -50,8 +52,10 @@ class TkinterUI:
             "open_proxy": self.default_ui.open_proxy_var.get(),
             "open_keep_all": self.default_ui.open_keep_all_var.get(),
             "open_sort": self.default_ui.open_sort_var.get(),
-            "response_time_weight": self.default_ui.response_time_weight_entry.get(),
-            "resolution_weight": self.default_ui.resolution_weight_entry.get(),
+            "open_filter_resolution": self.default_ui.open_filter_resolution_var.get(),
+            "min_resolution": self.default_ui.min_resolution_entry.get(),
+            "response_time_weight": self.default_ui.response_time_weight_scale.get(),
+            "resolution_weight": self.default_ui.resolution_weight_scale.get(),
             "ipv_type": self.default_ui.ipv_type_combo.get(),
             "domain_blacklist": self.default_ui.domain_blacklist_text.get(1.0, tk.END),
             "url_keywords_blacklist": self.default_ui.url_keywords_blacklist_text.get(
@@ -72,6 +76,7 @@ class TkinterUI:
             "open_online_search": self.online_search_ui.open_online_search_var.get(),
             "online_search_page_num": self.online_search_ui.page_num_entry.get(),
             "recent_days": self.online_search_ui.recent_days_entry.get(),
+            "open_update_time": self.default_ui.open_update_time_var.get(),
         }
 
         for key, value in config_values.items():
@@ -81,6 +86,7 @@ class TkinterUI:
 
     def change_state(self, state):
         self.default_ui.change_entry_state(state=state)
+        self.prefer_ui.change_entry_state(state=state)
         self.multicast_ui.change_entry_state(state=state)
         self.hotel_ui.change_entry_state(state=state)
         self.subscribe_ui.change_entry_state(state=state)
@@ -145,6 +151,7 @@ class TkinterUI:
         notebook.pack(fill="both", padx=10, pady=5)
 
         frame_default = tk.ttk.Frame(notebook)
+        frame_prefer = tk.ttk.Frame(notebook)
         frame_hotel = tk.ttk.Frame(notebook)
         frame_multicast = tk.ttk.Frame(notebook)
         frame_subscribe = tk.ttk.Frame(notebook)
@@ -154,6 +161,10 @@ class TkinterUI:
             resource_path("static/images/settings_icon.png")
         ).resize((16, 16))
         settings_icon = ImageTk.PhotoImage(settings_icon_source)
+        prefer_icon_source = Image.open(
+            resource_path("static/images/prefer_icon.png")
+        ).resize((16, 16))
+        prefer_icon = ImageTk.PhotoImage(prefer_icon_source)
         hotel_icon_source = Image.open(
             resource_path("static/images/hotel_icon.png")
         ).resize((16, 16))
@@ -174,6 +185,7 @@ class TkinterUI:
         notebook.add(
             frame_default, text="通用设置", image=settings_icon, compound=tk.LEFT
         )
+        notebook.add(frame_prefer, text="偏好设置", image=prefer_icon, compound=tk.LEFT)
         notebook.add(frame_hotel, text="酒店源", image=hotel_icon, compound=tk.LEFT)
         notebook.add(
             frame_multicast, text="组播源", image=multicast_icon, compound=tk.LEFT
@@ -183,18 +195,20 @@ class TkinterUI:
         )
         notebook.add(
             frame_online_search,
-            text="在线搜索",
+            text="关键字搜索",
             image=online_search_icon,
             compound=tk.LEFT,
         )
 
         notebook.settings_icon = settings_icon
+        notebook.prefer_icon = prefer_icon
         notebook.hotel_icon = hotel_icon
         notebook.multicast_icon = multicast_icon
         notebook.subscribe_icon = subscribe_icon
         notebook.online_search_icon = online_search_icon
 
         self.default_ui.init_ui(frame_default)
+        self.prefer_ui.init_ui(frame_prefer)
         self.multicast_ui.init_ui(frame_multicast)
         self.hotel_ui.init_ui(frame_hotel)
         self.subscribe_ui.init_ui(frame_subscribe)
@@ -240,7 +254,7 @@ def get_root_location(root):
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
     width = 550
-    height = 650
+    height = 720
     x = (screen_width / 2) - (width / 2)
     y = (screen_height / 2) - (height / 2)
     return (width, height, x, y)
