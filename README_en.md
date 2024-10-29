@@ -80,7 +80,7 @@
 ## Features
 
 - Customize the template to generate the channel you want
-- Supports multiple source acquisition methods: multicast source, hotel source, subscription source, online search
+- Supports multiple source acquisition methods: multicast source, hotel source, subscription source, keyword search
 - Interface speed testing and verification, with priority on response time and resolution, filtering out ineffective interfaces
 - Scheduled execution at 6:00 AM and 18:00 PM Beijing time daily
 - Supports various execution methods: workflows, command line, GUI software, Docker(amd64/arm64)
@@ -91,13 +91,13 @@
 - Interface source:
 
 ```bash
-  https://ghproxy.net/raw.githubusercontent.com/Guovin/TV/gd/output/result.m3u
+https://ghproxy.net/raw.githubusercontent.com/Guovin/TV/gd/output/result.m3u
 ```
 
 - Data source:
 
 ```bash
-  https://ghproxy.net/raw.githubusercontent.com/Guovin/TV/gd/source.json
+https://ghproxy.net/raw.githubusercontent.com/Guovin/TV/gd/source.json
 ```
 
 ## Config
