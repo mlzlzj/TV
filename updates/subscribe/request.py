@@ -1,7 +1,8 @@
-from utils.config import config
+import utils.constants as constants
 from tqdm.asyncio import tqdm_asyncio
 from time import time
 from requests import Session, exceptions
+from utils.config import config
 from utils.retry import retry_func
 from utils.channel import get_name_url, format_channel_name
 from utils.tools import (
@@ -12,8 +13,6 @@ from utils.tools import (
 )
 from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
-
-timeout = config.getint("Settings", "request_timeout", fallback=10)
 
 
 async def get_channels_by_subscribe_urls(
@@ -28,12 +27,7 @@ async def get_channels_by_subscribe_urls(
     Get the channels by subscribe urls
     """
     subscribe_results = {}
-    subscribe_urls = [
-        url.strip()
-        for url in config.get("Settings", "subscribe_urls", fallback="").split(",")
-        if url.strip()
-    ]
-    subscribe_urls_len = len(urls if urls else subscribe_urls)
+    subscribe_urls_len = len(urls if urls else config.subscribe_urls)
     pbar = tqdm_asyncio(
         total=subscribe_urls_len,
         desc=f"Processing subscribe {'for multicast' if multicast else ''}",
@@ -60,22 +54,33 @@ async def get_channels_by_subscribe_urls(
             try:
                 response = (
                     retry_func(
-                        lambda: session.get(subscribe_url, timeout=timeout),
+                        lambda: session.get(
+                            subscribe_url, timeout=config.request_timeout
+                        ),
                         name=subscribe_url,
                     )
                     if retry
-                    else session.get(subscribe_url, timeout=timeout)
+                    else session.get(subscribe_url, timeout=config.request_timeout)
                 )
             except exceptions.Timeout:
                 print(f"Timeout on subscribe: {subscribe_url}")
             if response:
                 response.encoding = "utf-8"
                 content = response.text
-                data = get_name_url(content, m3u="#EXTM3U" in content)
+                data = get_name_url(
+                    content,
+                    pattern=(
+                        constants.m3u_pattern
+                        if "#EXTM3U" in content
+                        else constants.txt_pattern
+                    ),
+                    multiline=True,
+                )
                 for item in data:
                     name = item["name"]
                     url = item["url"]
                     if name and url:
+                        url = url.partition("$")[0]
                         if not multicast:
                             info = (
                                 f"{region}酒店源"
@@ -115,7 +120,7 @@ async def get_channels_by_subscribe_urls(
     with ThreadPoolExecutor(max_workers=100) as executor:
         futures = [
             executor.submit(process_subscribe_channels, subscribe_url)
-            for subscribe_url in (urls if urls else subscribe_urls)
+            for subscribe_url in (urls if urls else config.subscribe_urls)
         ]
         for future in futures:
             subscribe_results = merge_objects(subscribe_results, future.result())
