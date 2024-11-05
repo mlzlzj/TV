@@ -3,13 +3,11 @@ from time import time
 import asyncio
 import re
 from utils.config import config
-from utils.tools import is_ipv6, get_resolution_value, add_url_info, remove_cache_info
+from utils.tools import is_ipv6, add_url_info, remove_cache_info, get_resolution_value
 import subprocess
 
-timeout = config.getint("Settings", "sort_timeout", fallback=5)
 
-
-async def get_speed(url, timeout=timeout, proxy=None):
+async def get_speed(url, timeout=config.sort_timeout, proxy=None):
     """
     Get the speed of the url
     """
@@ -45,7 +43,7 @@ def is_ffmpeg_installed():
         return False
 
 
-async def ffmpeg_url(url, timeout=timeout):
+async def ffmpeg_url(url, timeout=config.sort_timeout):
     """
     Get url info by ffmpeg
     """
@@ -127,20 +125,23 @@ async def get_speed_by_info(
         url, _, resolution, _ = url_info
         url_info = list(url_info)
         cache_key = None
+        url_is_ipv6 = is_ipv6(url)
         if "$" in url:
-            url, cache_info = url.split("$", 1)
+            url, _, cache_info = url.partition("$")
             matcher = re.search(r"cache:(.*)", cache_info)
             if matcher:
                 cache_key = matcher.group(1)
             url_show_info = remove_cache_info(cache_info)
-        url_is_ipv6 = is_ipv6(url)
-        if url_is_ipv6:
-            url = add_url_info(url, "IPv6")
         url_info[0] = url
         if cache_key in speed_cache:
             speed = speed_cache[cache_key][0]
             url_info[2] = speed_cache[cache_key][1]
-            return (tuple(url_info), speed) if speed != float("inf") else float("inf")
+            if speed != float("inf"):
+                if url_show_info:
+                    url_info[0] = add_url_info(url, url_show_info)
+                return (tuple(url_info), speed)
+            else:
+                return float("inf")
         try:
             if ipv6_proxy and url_is_ipv6:
                 url = ipv6_proxy + url
@@ -168,10 +169,6 @@ async def get_speed_by_info(
                 callback()
 
 
-response_time_weight = config.getfloat("Settings", "response_time_weight", fallback=0.5)
-resolution_weight = config.getfloat("Settings", "resolution_weight", fallback=0.5)
-
-
 async def sort_urls_by_speed_and_resolution(
     data, ffmpeg=False, ipv6_proxy=None, callback=None
 ):
@@ -193,8 +190,8 @@ async def sort_urls_by_speed_and_resolution(
         (_, _, resolution), response_time = item
         resolution_value = get_resolution_value(resolution) if resolution else 0
         return (
-            -(response_time_weight * response_time)
-            + resolution_weight * resolution_value
+            -(config.response_time_weight * response_time)
+            + config.resolution_weight * resolution_value
         )
 
     sorted_res = sorted(valid_response, key=combined_key, reverse=True)
