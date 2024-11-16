@@ -1,5 +1,6 @@
 from asyncio import create_task, gather
 from utils.config import config
+import utils.constants as constants
 from utils.speed import get_speed
 from utils.channel import (
     format_channel_name,
@@ -11,6 +12,7 @@ from utils.tools import (
     get_pbar_remaining,
     get_soup,
     format_url_with_cache,
+    add_url_info,
 )
 from updates.proxy import get_proxy, get_proxy_next
 from time import time
@@ -26,32 +28,12 @@ from concurrent.futures import ThreadPoolExecutor
 from requests_custom.utils import get_soup_requests, close_session
 
 
-async def use_accessible_url(callback):
-    """
-    Check if the url is accessible
-    """
-    callback(f"正在获取最优的关键字搜索节点", 0)
-    baseUrl1 = "https://www.foodieguide.com/iptvsearch/"
-    baseUrl2 = "http://tonkiang.us/"
-    task1 = create_task(get_speed(baseUrl1, timeout=config.request_timeout))
-    task2 = create_task(get_speed(baseUrl2, timeout=config.request_timeout))
-    task_results = await gather(task1, task2)
-    callback(f"获取关键字搜索节点完成", 100)
-    if task_results[0] == float("inf") and task_results[1] == float("inf"):
-        return None
-    if task_results[0] < task_results[1]:
-        return baseUrl1
-    else:
-        return baseUrl2
-
-
 async def get_channels_by_online_search(names, callback=None):
     """
     Get the channels by online search
     """
     channels = {}
-    # pageUrl = await use_accessible_url(callback)
-    pageUrl = "http://tonkiang.us/"
+    pageUrl = constants.foodie_url
     if not pageUrl:
         return channels
     proxy = None
@@ -61,9 +43,10 @@ async def get_channels_by_online_search(names, callback=None):
     if open_proxy:
         proxy = await get_proxy(pageUrl, best=True, with_test=True)
     start_time = time()
+    online_search_name = constants.origin_map["online_search"]
 
     def process_channel_by_online_search(name):
-        nonlocal proxy, open_proxy, open_driver, page_num
+        nonlocal proxy
         info_list = []
         driver = None
         try:
@@ -83,7 +66,7 @@ async def get_channels_by_online_search(names, callback=None):
                 search_submit(driver, name)
             else:
                 page_soup = None
-                request_url = f"{pageUrl}?channel={name}"
+                request_url = f"{pageUrl}?s={name}"
                 try:
                     page_soup = retry_func(
                         lambda: get_soup_requests(request_url, proxy=proxy),
@@ -118,7 +101,7 @@ async def get_channels_by_online_search(names, callback=None):
                                     "arguments[0].click();", page_link
                                 )
                             else:
-                                request_url = f"{pageUrl}?channel={name}&page={page}"
+                                request_url = f"{pageUrl}?s={name}&page={page}"
                                 page_soup = retry_func(
                                     lambda: get_soup_requests(request_url, proxy=proxy),
                                     name=f"online search:{name}, page:{page}",
@@ -166,6 +149,7 @@ async def get_channels_by_online_search(names, callback=None):
                             for result in results:
                                 url, date, resolution = result
                                 if url and check_url_by_patterns(url):
+                                    url = add_url_info(url, online_search_name)
                                     url = format_url_with_cache(url)
                                     info_list.append((url, date, resolution))
                             break
