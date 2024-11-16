@@ -1,0 +1,13 @@
+dist
+build
+**/*.log
+docs
+tkinter_ui
+**/*.md
+**/*.jpg
+**/*.png
+version.json
+.git
+.github
+.gitignore
+.gitattributes
