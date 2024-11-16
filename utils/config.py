@@ -61,6 +61,12 @@ class ConfigManager:
         return self.config.get("Settings", "ipv_type", fallback="全部").lower()
 
     @property
+    def open_ipv6(self):
+        return (
+            "ipv6" in self.ipv_type or "all" in self.ipv_type or "全部" in self.ipv_type
+        )
+
+    @property
     def ipv_type_prefer(self):
         return [
             type.strip().lower()
@@ -91,7 +97,7 @@ class ConfigManager:
             for origin in self.config.get(
                 "Settings",
                 "origin_type_prefer",
-                fallback="subscribe,hotel,multicast,online_search",
+                fallback="hotel,multicast,subscribe,online_search",
             ).split(",")
             if origin.strip().lower()
         ]
@@ -142,16 +148,6 @@ class ConfigManager:
         return self.config.getint("Settings", "recent_days", fallback=30)
 
     @property
-    def domain_blacklist(self):
-        return [
-            domain.strip()
-            for domain in self.config.get(
-                "Settings", "domain_blacklist", fallback=""
-            ).split(",")
-            if domain.strip()
-        ]
-
-    @property
     def url_keywords_blacklist(self):
         return [
             keyword.strip()
@@ -190,8 +186,8 @@ class ConfigManager:
         return self.config.getboolean("Settings", f"open_hotel_fofa", fallback=True)
 
     @property
-    def open_hotel_tonkiang(self):
-        return self.config.getboolean("Settings", f"open_hotel_tonkiang", fallback=True)
+    def open_hotel_foodie(self):
+        return self.config.getboolean("Settings", f"open_hotel_foodie", fallback=True)
 
     @property
     def open_multicast(self):
@@ -202,9 +198,9 @@ class ConfigManager:
         return self.config.getboolean("Settings", f"open_multicast_fofa", fallback=True)
 
     @property
-    def open_multicast_tonkiang(self):
+    def open_multicast_foodie(self):
         return self.config.getboolean(
-            "Settings", f"open_multicast_tonkiang", fallback=True
+            "Settings", f"open_multicast_foodie", fallback=True
         )
 
     @property
@@ -219,9 +215,9 @@ class ConfigManager:
             "multicast": self.open_multicast,
             "online_search": self.open_online_search,
             "hotel_fofa": self.open_hotel_fofa,
-            "hotel_tonkiang": self.open_hotel_tonkiang,
+            "hotel_foodie": self.open_hotel_foodie,
             "multicast_fofa": self.open_multicast_fofa,
-            "multicast_tonkiang": self.open_multicast_tonkiang,
+            "multicast_foodie": self.open_multicast_foodie,
         }
 
     @property
@@ -305,6 +301,10 @@ class ConfigManager:
     @property
     def resolution_weight(self):
         return self.config.getfloat("Settings", "resolution_weight", fallback=0.5)
+
+    @property
+    def open_empty_category(self):
+        return self.config.getboolean("Settings", "open_empty_category", fallback=True)
 
     def load(self):
         """

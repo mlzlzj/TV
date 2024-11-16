@@ -6,6 +6,7 @@ import ipaddress
 from urllib.parse import urlparse
 import socket
 from utils.config import config
+import utils.constants as constants
 import re
 from bs4 import BeautifulSoup
 from flask import render_template_string, send_file
@@ -136,10 +137,19 @@ def get_total_urls_from_info_list(infoList, ipv6=False):
 
     total_urls = []
     for url, _, resolution, origin in infoList:
+        if not origin:
+            continue
+
         if origin == "important":
-            pure_url, _, info = url.partition("$")
-            new_info = info.partition("!")[2]
-            total_urls.append(f"{pure_url}${new_info}" if new_info else pure_url)
+            im_url, _, im_info = url.partition("$")
+            im_info_value = im_info.partition("!")[2]
+            total_urls.append(f"{im_url}${im_info_value}" if im_info_value else im_url)
+            continue
+
+        if origin == "subscribe" and "/rtp/" in url:
+            origin = "multicast"
+
+        if origin not in origin_type_prefer:
             continue
 
         if config.open_filter_resolution and resolution:
@@ -147,15 +157,18 @@ def get_total_urls_from_info_list(infoList, ipv6=False):
             if resolution_value < config.min_resolution_value:
                 continue
 
-        if not origin or (origin not in origin_type_prefer):
-            continue
-
-        if origin == "subscribe" and "/rtp/" in url:
-            origin = "multicast"
+        pure_url, _, info = url.partition("$")
+        if not info:
+            origin_name = constants.origin_map[origin]
+            if origin_name:
+                url = add_url_info(pure_url, origin_name)
 
         url_is_ipv6 = is_ipv6(url)
         if url_is_ipv6:
-            url += "|IPv6"
+            url = add_url_info(url, "IPv6")
+
+        if resolution:
+            url = add_url_info(url, resolution)
 
         if url_is_ipv6:
             categorized_urls[origin]["ipv6"].append(url)
@@ -261,17 +274,6 @@ def check_url_ipv_type(url):
     )
 
 
-def check_by_domain_blacklist(url):
-    """
-    Check by domain blacklist
-    """
-    domain_blacklist = {
-        (urlparse(domain).netloc if urlparse(domain).scheme else domain)
-        for domain in config.domain_blacklist
-    }
-    return urlparse(url).netloc not in domain_blacklist
-
-
 def check_by_url_keywords_blacklist(url):
     """
     Check by URL blacklist keywords
@@ -283,11 +285,7 @@ def check_url_by_patterns(url):
     """
     Check the url by patterns
     """
-    return (
-        check_url_ipv_type(url)
-        and check_by_domain_blacklist(url)
-        and check_by_url_keywords_blacklist(url)
-    )
+    return check_url_ipv_type(url) and check_by_url_keywords_blacklist(url)
 
 
 def filter_urls_by_patterns(urls):
@@ -295,7 +293,6 @@ def filter_urls_by_patterns(urls):
     Filter urls by patterns
     """
     urls = [url for url in urls if check_url_ipv_type(url)]
-    urls = [url for url in urls if check_by_domain_blacklist(url)]
     urls = [url for url in urls if check_by_url_keywords_blacklist(url)]
     return urls
 
@@ -387,12 +384,15 @@ def get_result_file_content(show_result=False):
     Get the content of the result file
     """
     user_final_file = resource_path(config.final_file)
-    if config.open_m3u_result:
-        user_final_file = os.path.splitext(user_final_file)[0] + ".m3u"
-        if show_result == False:
-            return send_file(user_final_file, as_attachment=True)
-    with open(user_final_file, "r", encoding="utf-8") as file:
-        content = file.read()
+    if os.path.exists(user_final_file):
+        if config.open_m3u_result:
+            user_final_file = os.path.splitext(user_final_file)[0] + ".m3u"
+            if show_result == False:
+                return send_file(user_final_file, as_attachment=True)
+        with open(user_final_file, "r", encoding="utf-8") as file:
+            content = file.read()
+    else:
+        content = "🔍️正在更新，请耐心等待更新完成..."
     return render_template_string(
         "<head><link rel='icon' href='{{ url_for('static', filename='images/favicon.ico') }}' type='image/x-icon'></head><pre>{{ content }}</pre>",
         content=content,
@@ -486,3 +486,20 @@ def resource_path(relative_path, persistent=False):
             return os.path.join(base_path, relative_path)
         except Exception:
             return total_path
+
+
+def write_content_into_txt(content, path=None, newline=True, callback=None):
+    """
+    Write content into txt file
+    """
+    if not path:
+        return
+
+    with open(path, "a", encoding="utf-8") as f:
+        if newline:
+            f.write(f"\n{content}")
+        else:
+            f.write(content)
+
+    if callback:
+        callback()
