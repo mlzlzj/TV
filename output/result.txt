@@ -1,5 +1,5 @@
 更新时间,#genre#
-2024-12-03 05:58:41,url
+2024-12-03 14:36:21,url
 📺央视频道,#genre#
 CCTV1,http://58.19.38.162:9901/tsfile/live/1000_1.m3u8?key=txiptv&playlive=1&authid=0$湖北酒店源
 CCTV1,http://183.94.146.109:2222/tsfile/live/0001_1.m3u8?key=txiptv&playlive=1&authid=0$湖北酒店源
