@@ -1,5 +1,5 @@
 #EXTM3U x-tvg-url="https://live.fanmingming.com/e.xml"
-#EXTINF:-1 tvg-name="2024-12-26 18:02:23" tvg-logo="https://live.fanmingming.com/tv/2024-12-26 18:02:23.png" group-title="更新时间",2024-12-26 18:02:23
+#EXTINF:-1 tvg-name="2024-12-27 05:53:47" tvg-logo="https://live.fanmingming.com/tv/2024-12-27 05:53:47.png" group-title="更新时间",2024-12-27 05:53:47
 url
 #EXTINF:-1 tvg-name="CCTV1" tvg-logo="https://live.fanmingming.com/tv/CCTV1.png" group-title="📺央视频道",CCTV1
 http://116.128.242.83:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=1&authid=0$北京酒店源
