@@ -1,7 +1,7 @@
-import requests
 import re
+
+import requests
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
 
 headers = {
     "Accept": "*/*",
@@ -18,8 +18,6 @@ def get_source_requests(url, data=None, proxy=None, timeout=30):
     Get the source by requests
     """
     proxies = {"http": proxy}
-    ua = UserAgent()
-    headers["User-Agent"] = ua.random
     if data:
         response = session.post(
             url, headers=headers, data=data, proxies=proxies, timeout=timeout
