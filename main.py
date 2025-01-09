@@ -1,7 +1,17 @@
 import asyncio
-from utils.config import config
+import copy
+import pickle
+from time import time
+
+from tqdm import tqdm
+
 import utils.constants as constants
 from service.app import run_service
+from updates.fofa import get_channels_by_fofa
+from updates.hotel import get_channels_by_hotel
+from updates.multicast import get_channels_by_multicast
+from updates.online_search import get_channels_by_online_search
+from updates.subscribe import get_channels_by_subscribe_urls
 from utils.channel import (
     get_channel_items,
     append_total_data,
@@ -10,6 +20,7 @@ from utils.channel import (
     get_channel_data_cache_with_compare,
     format_channel_url_info,
 )
+from utils.config import config
 from utils.tools import (
     update_file,
     get_pbar_remaining,
@@ -19,21 +30,15 @@ from utils.tools import (
     format_interval,
     check_ipv6_support,
     resource_path,
+    get_urls_from_file,
+    get_version_info
 )
-from updates.subscribe import get_channels_by_subscribe_urls
-from updates.multicast import get_channels_by_multicast
-from updates.hotel import get_channels_by_hotel
-from updates.fofa import get_channels_by_fofa
-from updates.online_search import get_channels_by_online_search
-from tqdm import tqdm
-from time import time
-import pickle
-import copy
 
 
 class UpdateSource:
 
     def __init__(self):
+        self.update_progress = None
         self.run_ui = False
         self.tasks = []
         self.channel_items = {}
@@ -62,14 +67,15 @@ class UpdateSource:
 
         for setting, task_func, result_attr in tasks_config:
             if (
-                setting == "hotel_foodie" or setting == "hotel_fofa"
+                    setting == "hotel_foodie" or setting == "hotel_fofa"
             ) and config.open_hotel == False:
                 continue
             if config.open_method[setting]:
                 if setting == "subscribe":
-                    subscribe_urls = config.subscribe_urls
+                    subscribe_urls = get_urls_from_file(constants.subscribe_path)
+                    whitelist_urls = get_urls_from_file(constants.whitelist_path)
                     task = asyncio.create_task(
-                        task_func(subscribe_urls, callback=self.update_progress)
+                        task_func(subscribe_urls, whitelist=whitelist_urls, callback=self.update_progress)
                     )
                 elif setting == "hotel_foodie" or setting == "hotel_fofa":
                     task = asyncio.create_task(task_func(callback=self.update_progress))
@@ -102,14 +108,18 @@ class UpdateSource:
 
     async def main(self):
         try:
+            user_final_file = config.final_file
+            main_start_time = time()
             if config.open_update:
-                main_start_time = time()
                 self.channel_items = get_channel_items()
                 channel_names = [
                     name
                     for channel_obj in self.channel_items.values()
                     for name in channel_obj.keys()
                 ]
+                if not channel_names:
+                    print(f"❌ No channel names found! Please check the {config.source_file}!")
+                    return
                 await self.visit_page(channel_names)
                 self.tasks = []
                 append_total_data(
@@ -123,7 +133,7 @@ class UpdateSource:
                     self.online_search_result,
                 )
                 channel_data_cache = copy.deepcopy(self.channel_data)
-                ipv6_support = check_ipv6_support()
+                ipv6_support = config.ipv6_support or check_ipv6_support()
                 open_sort = config.open_sort
                 if open_sort:
                     urls_total = self.get_urls_len()
@@ -152,7 +162,6 @@ class UpdateSource:
                     callback=lambda: self.pbar_update(name="写入结果"),
                 )
                 self.pbar.close()
-                user_final_file = config.final_file
                 update_file(user_final_file, constants.result_path)
                 if config.open_use_old_result:
                     if open_sort:
@@ -160,22 +169,21 @@ class UpdateSource:
                             channel_data_cache, self.channel_data
                         )
                     with open(
-                        resource_path(constants.cache_path, persistent=True),
-                        "wb",
+                            resource_path(constants.cache_path, persistent=True),
+                            "wb",
                     ) as file:
                         pickle.dump(channel_data_cache, file)
-                convert_to_m3u()
-                total_time = format_interval(time() - main_start_time)
+                convert_to_m3u(channel_names[0])
                 print(
-                    f"🥳 Update completed! Total time spent: {total_time}. Please check the {user_final_file} file!"
+                    f"🥳 Update completed! Total time spent: {format_interval(time() - main_start_time)}. Please check the {user_final_file} file!"
                 )
-            open_service = config.open_service
             if self.run_ui:
+                open_service = config.open_service
                 service_tip = ", 可使用以下链接观看直播:" if open_service else ""
                 tip = (
                     f"✅ 服务启动成功{service_tip}"
                     if open_service and config.open_update == False
-                    else f"🥳 更新完成, 耗时: {total_time}, 请检查{user_final_file}文件{service_tip}"
+                    else f"🥳 更新完成, 耗时: {format_interval(time() - main_start_time)}, 请检查{user_final_file}文件{service_tip}"
                 )
                 self.update_progress(
                     tip,
@@ -205,6 +213,8 @@ class UpdateSource:
 
 
 if __name__ == "__main__":
+    info = get_version_info()
+    print(f"ℹ️ {info['name']} Version: {info['version']}")
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     update_source = UpdateSource()
