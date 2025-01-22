@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
     branches:
       - main
+
 jobs:
   push:
     runs-on: ${{ matrix.operating-system }}
@@ -17,7 +18,7 @@ jobs:
     steps:
       - name: Set branch name
         id: vars
-        run: echo "BRANCH_NAME=${{ github.repository_owner == 'main' }}" >> $GITHUB_ENV
+        run: echo "BRANCH_NAME=${{ github.ref }}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
         with:
           ref: ${{ env.BRANCH_NAME }}
