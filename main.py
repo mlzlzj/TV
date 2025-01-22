@@ -97,7 +97,7 @@ class UpdateSource:
     def get_urls_len(self, filter=False):
         data = copy.deepcopy(self.channel_data)
         if filter:
-            process_nested_dict(data, seen=set(), flag=r"cache:(.*)", force_str="!")
+            process_nested_dict(data, seen={}, flag=r"cache:(.*)", force_str="!")
         processed_urls = set(
             url_info[0]
             for channel_obj in data.values()
@@ -163,7 +163,7 @@ class UpdateSource:
                 )
                 self.pbar.close()
                 update_file(user_final_file, constants.result_path)
-                if config.open_use_old_result:
+                if config.open_history:
                     if open_sort:
                         get_channel_data_cache_with_compare(
                             channel_data_cache, self.channel_data
